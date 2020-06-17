@@ -63,3 +63,28 @@ fitarima<-list(0)
 for (i in 1:24) {
   fitarima[[i]]<-auto.arima(serie[[i]])
 }
+
+#ajuste manual do arima pra compensar acf dos residuos
+manual_fit_10hrs<-Arima(serie[[11]], order= c(9,1,2))
+manual_fit_11hrs<-Arima(serie[[12]], order= c(9,1,3))   
+manual_fit_12hrs<-Arima(serie[[13]], order= c(2,1,1))
+manual_fit_14hrs<-Arima(serie[[15]], order= c(2,1,1))
+manual_fit_15hrs<-Arima(serie[[16]], order= c(5,1,2))
+manual_fit_18hrs<-Arima(serie[[19]], order= c(4,1,3))
+
+#checagem de res?duos
+checkresiduals(manual_fit_18hrs)
+mean(manual_fit_18hrs[["residuals"]])
+abcde<-Acf(manual_fit_18hrs[["residuals"]])
+
+#2? ajuste manual das 18h
+manual_fit2_14hrs<-Arima(serie[[15]], order= c(4,1,1))
+manual_fit2_18hrs <-Arima(serie[[19]], order= c(10,1,3))
+
+
+auto<-plot(forecast(fitarima[[13]],h=5))
+manual<- plot(forecast(manual_fit_12hrs,h=5))
+auto_prev <-(forecast(fitarima[[13]],h=5))
+manual_prev <-(forecast(manual_fit_12hrs,h=5))
+
+
