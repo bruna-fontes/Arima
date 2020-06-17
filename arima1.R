@@ -1,0 +1,198 @@
+library(MASS)
+library(tidyverse)
+library(readxl)
+library(DescTools)
+#library(xlsx)
+library(gridExtra)
+#library(alr3)
+#library(fpp2)
+library(lubridate)
+library(scales)
+library(ggthemes)
+library(reshape2)
+#library(zoo)
+library(matrixStats)
+library(nortest)
+#library(googlesheets)
+library(forecast)
+#library(pear)
+
+setwd("~/IC")
+#install.packages(googlesheets)
+
+Solar <- read_delim("Dados.csv", delim = ",")
+rad<- Solar$radGlobalCPM11.radGlobal
+rad_hora<- c()
+for (i in 1:8784) {
+  rad_hora[i]<-mean(rad[(6*i-5):(6*i)])
+  
+}
+
+matriz <-matrix( rad_hora, nrow = 366, ncol = 24 , byrow = T)
+
+maximos<-0
+minimos <-0
+maximos<-apply(matriz, 2, max)
+minimos<-apply(matriz, 2, min)
+
+dias_min<-0
+dias_max<- 0
+
+for (i in 1:24) {
+  dias_min[i]<- match(minimos[i],matriz[,i])
+  dias_max[i]<-match(maximos[i],matriz[,i])
+}
+
+nao_retirar <- union(dias_min, dias_max) #dias que n?o podem ser retirados
+banco_treinamento<-0
+
+
+#teste_dia1<- matriz[366,]#01 de maio, unico dia repetido
+#teste_dia2<- matriz[365,]  #27 de novembro, um dia antes de um dia com muitos minimos
+#teste_dia3 <-matriz[364,]# 23 ou 25 de fev de 2014, um dia depois de um dia de m?ximo
+banco_treinamento<- matriz[-c(362,363,364,365, 366), ]
+#matriz_teste<-rbind(teste_dia3,teste_dia2, teste_dia1)
+matriz_teste<- matriz[c(362,363,364,365, 366), ]
+#?ts
+
+serie<-list(0)
+for (i in 1:24) {
+  serie[[i]]<-as.ts(banco_treinamento[,i])
+}
+
+#serie<-apply(banco_treinamento,2,as.ts)
+#serie[[1]]
+#aa<-as.ts(banco_treinamento[,12],frequency= 4)
+#decompose(aa)
+
+#autoplot(aa)
+#auto.arima(banco_treinamento[,12])
+#a<-list(a=0)
+#a<-apply(banco_treinamento,2,auto.arima)
+#b<-list(0)
+#for (i in 1:24) {
+# b[[i]]<- Acf(serie[[i]]) #n?o guarda o plot
+#}
+#PlotACF(serie[[11]])
+
+fitarima<-list(0)
+
+for (i in 1:24) {
+  fitarima[[i]]<-auto.arima(serie[[i]])
+}
+#checagem de res?duos
+autoplot( fitarima[[9]][["residuals"]])
+autoplot(fitarima[[9]][["x"]])
+autoplot(fitarima[[9]][["fitted"]])
+mean(fitarima[[9]][["residuals"]])
+
+gghistogram(fitarima[[12]][["residuals"]])
+mean(fitarima[[17]][["residuals"]])
+checkresiduals(fitarima[[1]]) #AMEI ESSA FUN??O
+abcde<-Acf(fitarima[[19]][["residuals"]])
+abcde
+#matriz_teste[,10]
+
+#auto.arima(serie[[13]], trace = TRUE, biasadj= TRUE, allowdrift = FALSE )
+#checkresiduals(auto.arima(serie[[13]], trace = TRUE, allowdrift = F ))
+
+
+#
+#
+#ajuste manual do arima pra compensar acf dos residuos
+manual_fit_10hrs<-Arima(serie[[11]], order= c(9,1,2))
+manual_fit_11hrs<-Arima(serie[[12]], order= c(9,1,3))   
+manual_fit_12hrs<-Arima(serie[[13]], order= c(2,1,1))
+manual_fit_14hrs<-Arima(serie[[15]], order= c(2,1,1))
+manual_fit_15hrs<-Arima(serie[[16]], order= c(5,1,2))
+manual_fit_18hrs<-Arima(serie[[19]], order= c(4,1,3))
+
+#checagem de res?duos
+checkresiduals(manual_fit_18hrs)
+mean(manual_fit_18hrs[["residuals"]])
+abcde<-Acf(manual_fit_18hrs[["residuals"]])
+
+#2? ajuste manual das 18h
+manual_fit2_14hrs<-Arima(serie[[15]], order= c(4,1,1))
+manual_fit2_18hrs <-Arima(serie[[19]], order= c(10,1,3))
+
+#checagem de res?duos
+checkresiduals(manual_fit2_14hrs)
+mean(manual_fit2_14hrs[["residuals"]])
+
+
+auto<-plot(forecast(fitarima[[13]],h=5))
+manual<- plot(forecast(manual_fit_12hrs,h=5))
+auto_prev <-(forecast(fitarima[[13]],h=5))
+manual_prev <-(forecast(manual_fit_12hrs,h=5))
+comp_80<- tibble(Lower_Auto = auto[["lower"]],
+                 Mean_Auto = auto[["mean"]],
+                 Upper_Auto = auto[["upper"]],
+                 Original = matriz_teste[,13],
+                 
+)
+comp_95<- tibble(Lower_Auto = auto[["lower"]][,2],
+                 Mean_Auto = auto[["mean"]],
+                 Upper_Auto = auto[["upper"]][,2],
+                 Original = matriz_teste[,13],
+                 Lower_Manual = manual[["lower"]][,2],
+                 Mean_Manual = manual[["mean"]],
+                 Upper_Manual = manual[["upper"]][,2]
+)
+
+
+previsao<-forecast(manual_fit_12hrs,h=5)
+aa<-accuracy(auto_prev,matriz_teste[,13])
+bb<-accuracy(manual_prev,matriz_teste[,13])
+cc<- c('-','-','-','-','-','-','-')
+
+dd<-rbind(aa,cc, bb)
+
+prev_auto<- list(0)
+
+for (i in 1:24) {
+  prev_auto[[i]]<- forecast(fitarima[[i]],h=5)
+}
+
+
+lista_lower<-list(0)
+for (i in 1:24) {
+  lista_lower[[i]]<- as.vector(prev_manual[[i]][["lower"]])
+}
+matriz_prev_low_95 <- matrix(data = NA, nrow = 5, ncol = 24)
+
+for (i in 1:24) {
+  matriz_prev_low_95[,i]<- lista_lower[[i]][6:10]
+}
+
+
+matriz_prev_low_80 <- matrix(data = NA, nrow = 5, ncol = 24)
+
+for (i in 1:24) {
+  matriz_prev_low_80[,i]<- lista_lower[[i]][1:5]
+}
+
+lista_upperr<-list(0)
+for (i in 1:24) {
+  lista_upperr[[i]]<- as.vector(prev_manual[[i]][["upper"]])
+}
+matriz_prev_upper_95 <- matrix(data = NA, nrow = 5, ncol = 24)
+
+for (i in 1:24) {
+  matriz_prev_upper_95[,i]<- lista_upperr[[i]][6:10]
+}
+
+
+matriz_prev_upper_80 <- matrix(data = NA, nrow = 5, ncol = 24)
+
+for (i in 1:24) {
+  matriz_prev_upper_80[,i]<- lista_upperr[[i]][1:5]
+}
+
+matriz_prev_mean <- matrix(data = NA, nrow = 5, ncol = 24)
+for (i in 1:24) {
+  matriz_prev_mean[,i]<- as.vector(prev_manual[[i]][["mean"]])
+}
+
+
+vetor_manualfit10h_<-as.vector()
