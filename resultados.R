@@ -54,3 +54,31 @@ for (i in 1:24) {
   matriz_prev_mean[,i]<- as.vector(prev_auto[[i]][["mean"]])
 }
 
+#Transformar em vetor pra plotar
+
+low_80<-c(t(matriz_prev_low_80))
+low_95<-c(t(matriz_prev_low_95))
+mean_auto <-c(t(matriz_prev_mean))
+upper_80<-c(t(matriz_prev_upper_80))
+upper_95<- c(t(matriz_prev_upper_95))
+teste <- c(t(matriz_teste))
+cont<- c(1:120)
+#plots
+
+graf_80<-ggplot() +
+  geom_line(aes(x= cont, y= low_80))+
+  geom_line(aes(x= cont, y= upper_80))+
+  geom_line(aes(x= cont, y= mean_auto))+
+  geom_line(aes(x= cont, y= teste))
+
+graf_95<-ggplot() +
+  geom_line(aes(x= cont, y= low_95))+
+  geom_line(aes(x= cont, y= upper_95))+
+  geom_line(aes(x= cont, y= mean_auto))+
+  geom_line(aes(x= cont, y= teste))
+
+graf_80_11h <- ggplot()+
+  geom_line(aes(x=c(1:5), y= matriz_prev_low_80[,12]))+
+  geom_line(aes(x=c(1:5), y= matriz_prev_upper_80[,12]))+
+  geom_line(aes(x=c(1:5), y= matriz_prev_mean[,12]))+
+  geom_point(aes(x=c(1:5), y= matriz_teste[,12]))
