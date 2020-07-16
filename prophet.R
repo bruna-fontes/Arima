@@ -22,7 +22,32 @@ prev_s<-list(0)
 for (i in 1:24) {
   prev_s[[i]]<-tail(forecast_s[[i]][c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
 }
-prev<-prev[-1,]
+
 for (i in 1:24) {
   prev_s[[i]]<-prev_s[[i]][-1,]
 }
+prev_com_saz<-list(0)
+for (i in 1:24) {
+  prev_com_saz[[i]]<-tail(forecast_com_saz[[i]][c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+}
+
+for (i in 1:24) {
+  prev_com_saz[[i]]<-prev_com_saz[[i]][-1,]
+}
+accuracy_s_yhat<-list(0)
+accuracy_s_low<-list(0)
+accuracy_s_up<-list(0)
+for (i in 1:24) {
+accuracy_s_yhat[[i]]<-accuracy(prev_s[[i]][["yhat"]],matriz_teste[,i]) 
+accuracy_s_low[[i]]<-accuracy(prev_s[[i]][["yhat_lower"]],matriz_teste[,i]) 
+accuracy_s_up[[i]]<-accuracy(prev_s[[i]][["yhat_upper"]],matriz_teste[,i]) 
+}
+com_saz_accuracy_yhat<-list(0)
+com_saz_accuracy_low<-list(0)
+com_saz_accuracy_up<-list(0)
+for (i in 1:24) {
+  com_saz_accuracy_yhat[[i]]<-accuracy(prev_com_saz[[i]][["yhat"]],matriz_teste[,i]) 
+  com_saz_accuracy_low[[i]]<-accuracy(prev_com_saz[[i]][["yhat_lower"]],matriz_teste[,i]) 
+  com_saz_accuracy_up[[i]]<-accuracy(prev_com_saz[[i]][["yhat_upper"]],matriz_teste[,i]) 
+}
+
