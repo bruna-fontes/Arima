@@ -2,8 +2,8 @@
 
 
 previsao<-forecast(manual_fit_12hrs,h=5)
-aa<-accuracy(auto_prev,matriz_teste[,13])
-bb<-accuracy(manual_prev,matriz_teste[,13])
+aa<-accuracy(prev_auto[[12]],matriz_teste[,12])
+ bb<-accuracy(prev,matriz_teste[,12])
 cc<- c('-','-','-','-','-','-','-')
 
 dd<-rbind(aa,cc, bb)
@@ -82,3 +82,21 @@ graf_80_11h <- ggplot()+
   geom_line(aes(x=c(1:5), y= matriz_prev_upper_80[,12]))+
   geom_line(aes(x=c(1:5), y= matriz_prev_mean[,12]))+
   geom_point(aes(x=c(1:5), y= matriz_teste[,12]))
+
+
+
+
+#metricas de "accuracy"
+
+arima_ac_low_80<-arima_ac_low_95<- arima_ac_up_95<-arima_ac_up_80<- arima_ac_media<- list(0)
+for (i in 1:24) {
+  arima_ac_low_95[[i]]<-accuracy(matriz_prev_low_95[,i],matriz_teste[,i]) 
+  arima_ac_low_80[[i]]<-accuracy(matriz_prev_low_80[,i],matriz_teste[,i]) 
+  arima_ac_up_80[[i]]<-accuracy(matriz_prev_upper_80[,i],matriz_teste[,i]) 
+  arima_ac_up_95[[i]]<-accuracy(matriz_prev_upper_80[,i],matriz_teste[,i]) 
+  arima_ac_media[[i]]<-accuracy(matriz_prev_upper_95[,i],matriz_teste[,i]) 
+}
+hora_0<-rbind(arima_ac_low_80[1],arima_ac_low_95[1],arima_ac_media[1],arima_ac_up_80[1],arima_ac_up_95[1])
+
+M<-matrix(data=NA,nrow = 5, ncol=24)
+nn<-c(arima_ac_low_95[1])
