@@ -7,6 +7,7 @@ b_controlcharts<-list(0)
 
 
 
+
 for (i in 1:24) {
   controlcharts_n[[i]]<-qcc(fitarima[[i]][["residuals"]], type = "xbar.one")
 }
@@ -31,6 +32,21 @@ plot(b_controlcharts[[11]])
 bcc((fitarima[[11]][["residuals"]]-min(fitarima[[11]][["residuals"]]))/(max(fitarima[[11]][["residuals"]])-min(fitarima[[11]][["residuals"]]))
 , type = "2")
 
+length((fitarima[[11]][["residuals"]]))
+
+#fazer gráficos corrido
+matriz_residuos <- matrix(data = NA, nrow = length((fitarima[[11]][["residuals"]])), ncol = 24)
+for (i in 1:24) {
+  matriz_residuos[,i]<- as.vector(fitarima[[i]][["residuals"]])
+}
+residuos<-c(t(matriz_residuos))
+graficodecontrole<- qcc(residuos, type = "xbar.one")
 
 
-#normalização, 
+
+
+pdf(file = "plotbcc_16hhh.pdf",
+    width = 12,
+    height = 5)
+plot(b_controlcharts[[17]])
+dev.off()

@@ -64,6 +64,8 @@ for (i in 1:24) {
   fitarima[[i]]<-auto.arima(serie[[i]])
 }
 
+
+
 #ajuste manual do arima pra compensar acf dos residuos
 manual_fit_10hrs<-Arima(serie[[11]], order= c(9,1,2))
 manual_fit_11hrs<-Arima(serie[[12]], order= c(9,1,3))   

@@ -17,8 +17,9 @@ library(nortest)
 library(forecast)
 #library(pear)
 
-setwd("~/IC")
+#setwd("~/IC")
 #install.packages(googlesheets)
+
 
 Solar <- read_delim("Dados.csv", delim = ",")
 rad<- Solar$radGlobalCPM11.radGlobal
